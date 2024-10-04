@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundraiser Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        main {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        nav {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #4CAF50;
+            margin: 0 15px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .edit-button {
+            background-color: #2196F3;
+        }
+        .delete-button {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <h1>Fundraiser Admin</h1>
+    </header>
+
+    <!-- Navigation Menu -->
+    <nav>
+        <a href="/">Home</a> |
+        <a href="/Fundraisers">Fundraisers</a> |
+        <a href="/add_Fundraisers">Add a New Fundraiser</a>
+    </nav>
+
+    <!-- Main Content Section -->
+    <main>
+        <h2>Create New Fundraiser</h2>
+
+        <!-- Fundraiser Creation Form -->
+        <section>
+            <form id="createForm">
+                <input type="text" id="organizer" placeholder="Organizer" required>
+                <input type="text" id="caption" placeholder="Caption" required>
+                <input type="number" id="target_funding" placeholder="Target Funding" required>
+                <input type="text" id="city" placeholder="City" required>
+                <select id="active">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+                <button type="submit">Create Fundraiser</button>
+            </form>
+        </section>
+
+        <!-- Fundraiser Table -->
+        <section>
+            <h2>Fundraisers</h2>
+            <table id="fundraisersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Organizer</th>
+                        <th>Caption</th>
+                        <th>Target Funding</th>
+                        <th>Current Funding</th>
+                        <th>City</th>
+                        <th>Active</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Script to fetch and display fundraisers -->
+    <script>
+        const API_URL = 'http://localhost:7090/api';
+
+        // Fetch and display fundraisers
+        function fetchFundraisers() {
+            fetch(`${API_URL}/fundraisers`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#fundraisersTable tbody');
+                    tableBody.innerHTML = '';
+                    data.forEach(fundraiser => {
+                        const row = `
+                            <tr>
+                                <td>${fundraiser.FUNDRAISER_ID}</td>
+                                <td>${fundraiser.ORGANIZER}</td>
+                                <td>${fundraiser.CAPTION}</td>
+                                <td>$${fundraiser.TARGET_FUNDING.toFixed(2)}</td>
+                                <td>$${fundraiser.CURRENT_FUNDING.toFixed(2)}</td>
+                                <td>${fundraiser.CITY}</td>
+                                <td>${fundraiser.ACTIVE ? 'Yes' : 'No'}</td>
+                                <td class="action-buttons">
+                                    <button class="edit-button" onclick="editFundraiser(${fundraiser.FUNDRAISER_ID})">Edit</button>
+                                    <button class="delete-button" onclick="deleteFundraiser(${fundraiser.FUNDRAISER_ID})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+    <!-- Script to create new fundraiser -->
+    <script>
+        document.getElementById('createForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = {
+                ORGANIZER: document.getElementById('organizer').value,
+                CAPTION: document.getElementById('caption').value,
+                TARGET_FUNDING: parseFloat(document.getElementById('target_funding').value),
+                CITY: document.getElementById('city').value,
+                ACTIVE: document.getElementById('active').value === 'true'
+            };
+    
+            fetch(`${API_URL}/fundraiser`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Fundraiser created successfully');
+                fetchFundraisers();
+                this.reset();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+    <!-- Script to edit fundraiser -->
+    <script>
+        function editFundraiser(id) {
+            fetch(`${API_URL}/fundraiser/${id}`)
+                .then(response => response.json())
+                .then(fundraiser => {
+                    document.getElementById('organizer').value = fundraiser.ORGANIZER;
+                    document.getElementById('caption').value = fundraiser.CAPTION;
+                    document.getElementById('target_funding').value = fundraiser.TARGET_FUNDING;
+                    document.getElementById('city').value = fundraiser.CITY;
+                    document.getElementById('active').value = fundraiser.ACTIVE.toString();
+
+                    const form = document.getElementById('createForm');
+                    form.onsubmit = function(e) {
+                        e.preventDefault();
+                        const updatedData = {
+                            ORGANIZER: document.getElementById('organizer').value,
+                            CAPTION: document.getElementById('caption').value,
+                            TARGET_FUNDING: parseFloat(document.getElementById('target_funding').value),
+                            CITY: document.getElementById('city').value,
+                            ACTIVE: document.getElementById('active').value === 'true'
+                        };
+
+                        fetch(`${API_URL}/fundraiser/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updatedData)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert('Fundraiser updated successfully');
+                            fetchFundraisers();
+                            form.reset();
+                            form.onsubmit = null;
+                        })
+                        .catch(error => console.error('Error:', error));
+                    };
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+    <!-- Script to delete fundraiser -->
+    <script>
+        function deleteFundraiser(id) {
+            if (confirm('Are you sure you want to delete this fundraiser?')) {
+                fetch(`${API_URL}/fundraiser/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('Fundraiser deleted successfully');
+                        fetchFundraisers();
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+
+        fetchFundraisers();
+    </script>
+</body>
+</html>
